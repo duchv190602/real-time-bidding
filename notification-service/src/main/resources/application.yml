@@ -1,0 +1,12 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+  kafka:
+    bootstrap-servers: localhost:9092
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:app},traceId=%X{traceId}]"
