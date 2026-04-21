@@ -1,12 +1,18 @@
 package com.duc.identity.dto.response;
 
-import java.util.Set;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-public record UserResponse(
-        Long id,
-        String email,
-        String fullName,
-        String provider,
-        Set<String> roles
-) {
+import java.util.Set;
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UserResponse {
+    String id;
+    String username;
+    String email;
+    boolean emailVerified;
+    Set<RoleResponse> roles;
 }

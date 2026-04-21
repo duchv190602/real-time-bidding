@@ -1,29 +1,38 @@
 server:
   port: 8088
+app:
+  api-prefix: /api/v1
 
 spring:
   application:
     name: api-gateway
   cloud:
     gateway:
-      mvc:
         routes:
           - id: identity-service
             uri: http://localhost:8080
             predicates:
-              - Path=/identity/**
+              - Path=${app.api-prefix}/identity/**
+            filters:
+              - StripPrefix=2
           - id: auction-service
             uri: http://localhost:8081
             predicates:
-              - Path=/auction/**
+              - Path=${app.api-prefix}/auction/**
+            filters:
+              - StripPrefix=2
           - id: bidding-service
             uri: http://localhost:8082
             predicates:
-              - Path=/bidding/**
+              - Path=${app.api-prefix}/bidding/**
+            filters:
+              - StripPrefix=2
           - id: notification-service
             uri: http://localhost:8083
             predicates:
-              - Path=/notification/**
+              - Path=${app.api-prefix}/notification/**
+            filters:
+              - StripPrefix=2
 
 security:
   jwt:

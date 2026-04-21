@@ -23,3 +23,4 @@ public class GatewayController {
         return ApiResponse.ok(gatewayRouteService.routes());
     }
 }
+

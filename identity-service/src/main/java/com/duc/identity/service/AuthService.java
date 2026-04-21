@@ -1,88 +1,164 @@
 package com.duc.identity.service;
 
-import com.duc.identity.configuration.JwtTokenProvider;
-import com.duc.identity.dto.request.LoginRequest;
-import com.duc.identity.dto.request.RegisterRequest;
+import com.duc.identity.dto.request.AuthenticationRequest;
+import com.duc.identity.dto.request.IntrospectRequest;
+import com.duc.identity.dto.request.LogoutRequest;
 import com.duc.identity.dto.response.AuthResponse;
-import com.duc.identity.entity.AuthProvider;
+import com.duc.identity.dto.response.IntrospectResponse;
+import com.duc.identity.entity.InvalidatedToken;
 import com.duc.identity.entity.User;
-import com.duc.identity.exception.DuplicateEmailException;
-import com.duc.identity.exception.InvalidCredentialsException;
-import com.duc.identity.mapper.UserMapper;
+import com.duc.identity.exception.AppException;
+import com.duc.identity.exception.ErrorCode;
+import com.duc.identity.repository.InvalidatedTokenRepository;
 import com.duc.identity.repository.UserRepository;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.text.ParseException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.Objects;
+import java.util.StringJoiner;
+import java.util.UUID;
+
+@RequiredArgsConstructor
+@Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Service
 public class AuthService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserMapper userMapper;
+    UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
-    public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider,
-            UserMapper userMapper
-    ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.userMapper = userMapper;
+    @NonFinal
+    @Value("${jwt.signerKey}")
+    protected String SIGNER_KEY;
+
+    @NonFinal
+    @Value("${jwt.valid-duration}")
+    protected long VALID_DURATION;
+
+    @NonFinal
+    @Value("${jwt.refreshable-duration}")
+    protected long REFRESHABLE_DURATION;
+
+    public AuthResponse authenticate(AuthenticationRequest request) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        var user = userRepository
+                .findByUsername(request.getUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+        if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        var token = generateToken(user);
+
+        return AuthResponse.builder().token(token).build();
     }
 
-    @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new DuplicateEmailException(request.email());
+    public IntrospectResponse introspect(IntrospectRequest request) throws ParseException {
+        var token = request.getToken();
+        boolean isValid = true;
+        SignedJWT jwt = null;
+        try {
+            jwt = verifyToken(token, false);
+        } catch (AppException | JOSEException | ParseException e) {
+            isValid = false;
         }
 
-        User user = new User();
-        user.setEmail(request.email());
-        user.setFullName(request.fullName());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setAuthProvider(AuthProvider.LOCAL);
-        user.getRoles().add("ROLE_USER");
-
-        User savedUser = userRepository.save(user);
-        return new AuthResponse(jwtTokenProvider.generateToken(savedUser), userMapper.toResponse(savedUser));
+        return IntrospectResponse.builder()
+                .userId(Objects.nonNull(jwt) ? jwt.getJWTClaimsSet().getSubject() : null)
+                .valid(isValid)
+                .build();
     }
 
-    @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
-                .orElseThrow(InvalidCredentialsException::new);
+    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+        try {
+            var signToken = verifyToken(request.getToken(), true);
 
-        if (user.getAuthProvider() != AuthProvider.LOCAL) {
-            throw new InvalidCredentialsException();
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidatedToken invalidatedToken =
+                    InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+
+            invalidatedTokenRepository.save(invalidatedToken);
+        } catch (AppException exception) {
+            log.info("Token already expired");
         }
-
-        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
-        }
-
-        return new AuthResponse(jwtTokenProvider.generateToken(user), userMapper.toResponse(user));
     }
 
-    @Transactional
-    public AuthResponse issueTokenForSocialUser(User user) {
-        User savedUser = userRepository.findByEmail(user.getEmail())
-                .map(existing -> mergeSocialUser(existing, user))
-                .map(userRepository::save)
-                .orElseGet(() -> userRepository.save(user));
+    private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
-        return new AuthResponse(jwtTokenProvider.generateToken(savedUser), userMapper.toResponse(savedUser));
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        Date expiryTime = (isRefresh)
+                ? new Date(signedJWT
+                .getJWTClaimsSet()
+                .getIssueTime()
+                .toInstant()
+                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
+                .toEpochMilli())
+                : signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var verified = signedJWT.verify(verifier);
+
+        if (!(verified && expiryTime.after(new Date()))) throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+
+        return signedJWT;
     }
 
-    private User mergeSocialUser(User existing, User candidate) {
-        existing.setFullName(candidate.getFullName());
-        existing.setAuthProvider(candidate.getAuthProvider());
-        existing.setEnabled(true);
-        if (existing.getRoles().isEmpty()) {
-            existing.getRoles().add("ROLE_USER");
+    private String generateToken(User user) {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .subject(user.getId())
+                .issuer("fpt.com")
+                .issueTime(new Date())
+                .expirationTime(new Date(
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
+                .claim("scope", buildScope(user))
+                .build();
+
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+
+        JWSObject jwsObject = new JWSObject(header, payload);
+
+        try {
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            log.error("Cannot create token", e);
+            throw new RuntimeException(e);
         }
-        return existing;
+    }
+    private String buildScope(User user) {
+        StringJoiner stringJoiner = new StringJoiner(" ");
+
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(role -> {
+                stringJoiner.add("ROLE_" + role.getName());
+            });
+
+        return stringJoiner.toString();
     }
 }
