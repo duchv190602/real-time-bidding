@@ -1,15 +1,13 @@
-package com.duc.identity.dto.response;
+package com.duc.identity.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthResponse {
+public class IntrospectRequest {
     String token;
-    Date expiryTime;
 }

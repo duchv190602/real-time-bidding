@@ -1,18 +1,18 @@
 package com.duc.identity.mapper;
-
+import com.duc.identity.dto.request.UserCreationRequest;
+import com.duc.identity.dto.request.UserUpdateRequest;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import com.duc.identity.dto.response.UserResponse;
 import com.duc.identity.entity.User;
-import org.springframework.stereotype.Component;
 
-@Component
-public class UserMapper {
-    public UserResponse toResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getAuthProvider().name(),
-                user.getRoles()
-        );
-    }
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    User toUser(UserCreationRequest request);
+
+    UserResponse toUserResponse(User user);
+
+    @Mapping(target = "roles", ignore = true)
+    void updateUser(@MappingTarget User user, UserUpdateRequest request);
 }

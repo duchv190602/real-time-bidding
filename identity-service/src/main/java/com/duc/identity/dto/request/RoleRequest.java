@@ -1,15 +1,17 @@
-package com.duc.identity.dto.response;
+package com.duc.identity.dto.request;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Date;
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthResponse {
-    String token;
-    Date expiryTime;
+public class RoleRequest {
+    String name;
+    String description;
+    Set<String> permissions;
 }
