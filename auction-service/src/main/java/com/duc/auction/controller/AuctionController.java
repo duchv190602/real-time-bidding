@@ -3,7 +3,6 @@ package com.duc.auction.controller;
 import com.duc.auction.constant.AuctionStatus;
 import com.duc.auction.dto.request.CreateAuctionRequest;
 import com.duc.auction.dto.request.UpdateAuctionRequest;
-import com.duc.auction.dto.request.UpdateAuctionStatusRequest;
 import com.duc.auction.dto.response.AuctionResponse;
 import com.duc.auction.service.AuctionService;
 import com.duc.common.dto.response.ApiResponse;
@@ -11,7 +10,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,12 +67,24 @@ public class AuctionController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}/status")
-    public ApiResponse<AuctionResponse> updateAuctionStatus(
-            @PathVariable String id,
-            @RequestBody @Valid UpdateAuctionStatusRequest request) {
+    @PutMapping("/{id}/approve")
+    public ApiResponse<AuctionResponse> approveAuction(@PathVariable String id) {
         return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.updateAuctionStatus(id, request)).build();
+                .result(auctionService.approveAuction(id)).build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/start")
+    public ApiResponse<AuctionResponse> startAuction(@PathVariable String id) {
+        return ApiResponse.<AuctionResponse>builder()
+                .result(auctionService.startAuction(id)).build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/cancel")
+    public ApiResponse<AuctionResponse> cancelAuction(@PathVariable String id) {
+        return ApiResponse.<AuctionResponse>builder()
+                .result(auctionService.cancelAuction(id)).build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")

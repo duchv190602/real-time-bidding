@@ -1,9 +1,9 @@
 package com.duc.auction.service;
 
 import com.duc.auction.constant.AuctionStatus;
+import com.duc.auction.dto.event.AuctionCreatedEvent;
 import com.duc.auction.dto.request.CreateAuctionRequest;
 import com.duc.auction.dto.request.UpdateAuctionRequest;
-import com.duc.auction.dto.request.UpdateAuctionStatusRequest;
 import com.duc.auction.dto.response.AuctionResponse;
 import com.duc.auction.entity.Auction;
 import com.duc.auction.exception.AppException;
@@ -20,12 +20,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
+import com.duc.auction.producer.AuctionEventProducer;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -34,6 +36,7 @@ import java.util.UUID;
 public class AuctionService {
     private final AuctionRepository auctionRepository;
     private final AuctionMapper auctionMapper;
+    private final AuctionEventProducer auctionEventProducer;
 
     @Value("${app.upload.dir:uploads/}")
     private String uploadDir;
@@ -84,12 +87,68 @@ public class AuctionService {
         return auctionMapper.toResponse(auction);
     }
 
-    public AuctionResponse updateAuctionStatus(String id, UpdateAuctionStatusRequest request) {
+    public AuctionResponse approveAuction(String id) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
-        auction.setStatus(request.getStatus());
+        if (auction.getStatus() != AuctionStatus.DRAFT) {
+            throw new AppException(ErrorCode.INVALID_STATUS_UPDATE);
+        }
+
+        if (auction.getEndAt() == null || auction.getStartPrice() == null || auction.getBidStep() == null) {
+            throw new AppException(ErrorCode.INVALID_STATUS_UPDATE);
+        }
+
+        auction.setStatus(AuctionStatus.APPROVED);
         auction = auctionRepository.save(auction);
+        return auctionMapper.toResponse(auction);
+    }
+
+    public AuctionResponse startAuction(String id) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() != AuctionStatus.APPROVED) {
+            throw new AppException(ErrorCode.INVALID_STATUS_UPDATE);
+        }
+
+        auction.setStartAt(LocalDateTime.now());
+        auction.setStatus(AuctionStatus.ACTIVE);
+        
+        auctionEventProducer.sendAuctionCreatedEvent(
+                        AuctionCreatedEvent.builder()
+                        .auctionId(auction.getId())
+                        .startPrice(auction.getStartPrice())
+                        .bidStep(auction.getBidStep())
+                        .startTime(auction.getStartAt())
+                        .endTime(auction.getEndAt())
+                        .build()
+        );
+
+        auction = auctionRepository.save(auction);
+        return auctionMapper.toResponse(auction);
+    }
+
+    public AuctionResponse cancelAuction(String id) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() == AuctionStatus.ENDED || auction.getStatus() == AuctionStatus.CANCELLED) {
+            throw new AppException(ErrorCode.INVALID_STATUS_UPDATE);
+        }
+
+        boolean wasActive = auction.getStatus() == AuctionStatus.ACTIVE;
+        auction.setStatus(AuctionStatus.CANCELLED);
+        auction = auctionRepository.save(auction);
+
+        if (wasActive) {
+            auctionEventProducer.sendAuctionEndedEvent(
+                    com.duc.auction.dto.event.AuctionEndedEvent.builder()
+                            .auctionId(auction.getId())
+                            .build()
+            );
+        }
+
         return auctionMapper.toResponse(auction);
     }
 
