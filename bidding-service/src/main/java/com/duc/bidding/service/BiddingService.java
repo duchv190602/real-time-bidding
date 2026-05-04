@@ -1,32 +1,96 @@
 package com.duc.bidding.service;
 
-import com.duc.bidding.dto.request.PlaceBidRequest;
-import com.duc.bidding.dto.response.BidResponse;
-import com.duc.bidding.entity.BidRecord;
-import com.duc.bidding.mapper.BidMapper;
-import com.duc.bidding.repository.BidRepository;
-import org.springframework.kafka.core.KafkaTemplate;
+import com.duc.bidding.dto.event.BidEvent;
+import com.duc.bidding.dto.request.BidRequest;
+import com.duc.bidding.exception.AppException;
+import com.duc.bidding.exception.ErrorCode;
+import com.duc.bidding.kafka.BidEventProducer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-@Service
-public class BiddingService {
-    private final BidRepository bidRepository;
-    private final BidMapper bidMapper;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
-    public BiddingService(BidRepository bidRepository, BidMapper bidMapper, KafkaTemplate<String, String> kafkaTemplate) {
-        this.bidRepository = bidRepository;
-        this.bidMapper = bidMapper;
-        this.kafkaTemplate = kafkaTemplate;
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class BiddingService {
+
+    private final RedissonClient redissonClient;
+    private final BidEventProducer bidEventProducer;
+
+    public void placeBid( BidRequest request) {
+        log.info("bidding service 1 ");
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        String auctionId = request.getAuctionId();
+        
+        RLock lock = redissonClient.getLock("lock:auction:" + auctionId);
+        
+        try {
+            boolean isLocked = lock.tryLock(3, 5, TimeUnit.SECONDS);
+            if (!isLocked) {
+                throw new AppException(ErrorCode.CONCURRENCY_ERROR);
+            }
+            
+            RMap<String, String> auctionMap = redissonClient.getMap("auction:" + auctionId);
+            if (auctionMap.isEmpty()) {
+                throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
+            }
+            
+            checkTimeConstraints(auctionMap);
+            
+            BigDecimal currentPrice = new BigDecimal(auctionMap.get("currentPrice"));
+            BigDecimal bidStep = new BigDecimal(auctionMap.get("bidStep"));
+            BigDecimal minValidPrice = currentPrice.add(bidStep);
+            
+            if (request.getPrice().compareTo(minValidPrice) < 0) {
+                throw new AppException(ErrorCode.PRICE_TOO_LOW);
+            }
+            
+            // Record in Redis Cache
+            auctionMap.put("currentPrice", request.getPrice().toString());
+            log.info("bidding service 2");
+            // Emit to Kafka natively
+            BidEvent event = BidEvent.builder()
+                .auctionId(auctionId)
+                .userId(userId)
+                .newPrice(request.getPrice())
+                .bidAt(LocalDateTime.now())
+                .build();
+            log.info("bidding service 3");
+            bidEventProducer.sendBidEvent(event);
+            
+        } catch (InterruptedException e) {
+            log.error("Interrupted while acquiring lock", e);
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.CONCURRENCY_ERROR);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
-    public BidResponse placeBid(PlaceBidRequest request) {
-        BidRecord bidRecord = new BidRecord();
-        bidRecord.setAuctionId(request.auctionId());
-        bidRecord.setUserId(request.userId());
-        bidRecord.setAmount(request.amount());
-        BidRecord saved = bidRepository.save(bidRecord);
-        kafkaTemplate.send("rtb.bids", request.auctionId().toString(), request.amount().toPlainString());
-        return bidMapper.toResponse(saved);
+    private void checkTimeConstraints(RMap<String, String> auctionMap) {
+        LocalDateTime now = LocalDateTime.now();
+        if (auctionMap.containsKey("startTime")) {
+            LocalDateTime start = LocalDateTime.parse(auctionMap.get("startTime"));
+            if (now.isBefore(start)) {
+                throw new AppException(ErrorCode.AUCTION_NOT_STARTED);
+            }
+        }
+        if (auctionMap.containsKey("endTime")) {
+            LocalDateTime end = LocalDateTime.parse(auctionMap.get("endTime"));
+            if (now.isAfter(end)) {
+                throw new AppException(ErrorCode.AUCTION_ENDED);
+            }
+        }
     }
 }

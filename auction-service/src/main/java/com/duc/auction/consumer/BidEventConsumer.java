@@ -1,6 +1,7 @@
 package com.duc.auction.consumer;
 
 import com.duc.auction.constant.AuctionStatus;
+import com.duc.auction.dto.event.BidEvent;
 import com.duc.auction.entity.Auction;
 import com.duc.auction.repository.AuctionRepository;
 import lombok.RequiredArgsConstructor;
