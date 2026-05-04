@@ -2,7 +2,6 @@ package com.duc.identity.controller;
 
 import com.duc.common.dto.response.ApiResponse;
 import com.duc.identity.dto.request.UserCreationRequest;
-import com.duc.identity.dto.request.UserUpdateRequest;
 import com.duc.identity.dto.response.UserResponse;
 import com.duc.identity.service.UserService;
 import jakarta.validation.Valid;
@@ -50,7 +49,6 @@ public class UserController {
         userService.deleteUser(userId);
         return ApiResponse.<String>builder().result("User has been deleted").build();
     }
-
 //    @PutMapping("/{userId}")
 //    ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
 //        return ApiResponse.<UserResponse>builder()
