@@ -1,0 +1,249 @@
+/* ============================================================
+   AdminAuctionListPage Styles
+   ============================================================ */
+
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+.header {
+  padding: var(--space-12) 0 var(--space-8);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.headerContent {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.headerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-4);
+  padding: 6px 12px;
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(245, 166, 35, 0.06);
+}
+
+.headerTitle {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.headerSub {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* ---- Filter Bar ---- */
+.filterSection {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  padding: var(--space-4) 0;
+  position: sticky;
+  top: 60px;
+  z-index: 90;
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.filterLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.filterTabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.filterTab {
+  padding: 5px var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: none;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.filterTab:hover {
+  border-color: var(--border-default);
+  color: var(--text-primary);
+}
+
+.filterTabActive {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #0A0A0F;
+  font-weight: 700;
+}
+
+.resultCount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+/* ---- Main ---- */
+.main {
+  flex: 1;
+  padding: var(--space-10) 0 var(--space-16);
+}
+
+/* ---- Grid ---- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+/* ---- Card wrapper with edit overlay ---- */
+.cardWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.editBtn {
+  display: block;
+  margin-top: var(--space-2);
+  text-align: center;
+  width: 100%;
+}
+
+/* ---- Empty State ---- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-20) var(--space-6);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty svg { opacity: 0.3; }
+
+.empty h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.empty p { font-size: 0.9rem; }
+
+/* ---- Pagination ---- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pageBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pageInfo {
+  min-width: 100px;
+  text-align: center;
+}
+
+.pageNumber {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.pageNumber strong { color: var(--amber); }
+
+/* ---- Skeleton ---- */
+.skeletonCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.skeletonImage { height: 200px; width: 100%; }
+
+.skeletonContent {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeletonTitle { height: 20px; width: 80%; }
+.skeletonText  { height: 14px; width: 60%; }
+.skeletonPrice { height: 28px; width: 45%; margin-top: var(--space-2); }
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .grid { grid-template-columns: 1fr; }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -25,6 +25,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request
+                // WebSocket handshake endpoints must be publicly accessible
+                // JWT auth is handled by JwtChannelInterceptor on the STOMP CONNECT frame
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest()
                 .authenticated());
 

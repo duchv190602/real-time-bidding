@@ -10,11 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -24,6 +26,7 @@ public class BiddingService {
 
     private final RedissonClient redissonClient;
     private final BidEventProducer bidEventProducer;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public void placeBid( BidRequest request) {
         log.info("bidding service 1 ");
@@ -57,6 +60,7 @@ public class BiddingService {
             // Record in Redis Cache
             auctionMap.put("currentPrice", request.getPrice().toString());
             log.info("bidding service 2");
+
             // Emit to Kafka natively
             BidEvent event = BidEvent.builder()
                 .auctionId(auctionId)
@@ -66,6 +70,18 @@ public class BiddingService {
                 .build();
             log.info("bidding service 3");
             bidEventProducer.sendBidEvent(event);
+
+            // Broadcast via WebSocket to all subscribers of this auction
+            messagingTemplate.convertAndSend(
+                "/topic/auction/" + auctionId,
+                Map.of(
+                    "auctionId", auctionId,
+                    "newPrice",  request.getPrice(),
+                    "bidderId",  userId,
+                    "bidAt",     event.getBidAt().toString()
+                )
+            );
+            log.info("Broadcasted bid update to /topic/auction/{}", auctionId);
             
         } catch (InterruptedException e) {
             log.error("Interrupted while acquiring lock", e);

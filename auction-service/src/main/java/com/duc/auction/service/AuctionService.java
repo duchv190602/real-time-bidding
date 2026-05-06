@@ -60,6 +60,26 @@ public class AuctionService {
     public Page<AuctionResponse> getAuctions(int page, int size, AuctionStatus status) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Auction> auctions;
+        
+        java.util.List<AuctionStatus> allowedStatuses = java.util.List.of(
+                AuctionStatus.ACTIVE, AuctionStatus.APPROVED, AuctionStatus.ENDED
+        );
+
+        if (status != null) {
+            if (allowedStatuses.contains(status)) {
+                auctions = auctionRepository.findByStatus(status, pageable);
+            } else {
+                auctions = Page.empty(pageable);
+            }
+        } else {
+            auctions = auctionRepository.findByStatusIn(allowedStatuses, pageable);
+        }
+        return auctions.map(auctionMapper::toResponse);
+    }
+
+    public Page<AuctionResponse> getAuctionsForAdmin(int page, int size, AuctionStatus status) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Auction> auctions;
         if (status != null) {
             auctions = auctionRepository.findByStatus(status, pageable);
         } else {

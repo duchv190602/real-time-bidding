@@ -27,6 +27,12 @@ spring:
               - Path=${app.api-prefix}/bidding/**
             filters:
               - StripPrefix=2
+          - id: bidding-service-ws
+            uri: ws://localhost:8082
+            predicates:
+              - Path=${app.api-prefix}/bidding-ws/**
+            filters:
+              - StripPrefix=2
           - id: notification-service
             uri: http://localhost:8083
             predicates:
