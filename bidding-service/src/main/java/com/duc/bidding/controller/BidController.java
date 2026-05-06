@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 public class BidController {
 
     private final BiddingService biddingService;
+    @PreAuthorize("hasRole('USER')")
     @RequestMapping("/place-bid")
     @PostMapping
     public ApiResponse<String> placeBid(

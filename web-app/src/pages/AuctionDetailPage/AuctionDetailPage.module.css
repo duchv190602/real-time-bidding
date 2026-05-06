@@ -1,0 +1,458 @@
+.page {
+  flex: 1;
+  padding: var(--space-8) 0 var(--space-16);
+}
+
+.errorPage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-10) 0;
+  max-width: 500px;
+}
+
+/* ---- Breadcrumb ---- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+  font-size: 0.82rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.backLink:hover {
+  color: var(--amber);
+}
+
+.sep {
+  color: var(--text-muted);
+}
+
+.currentPage {
+  color: var(--text-muted);
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Layout ---- */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* ---- Left Column ---- */
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.countdownUrgent {
+  color: var(--red);
+  border-color: rgba(232, 64, 64, 0.3);
+  background: rgba(232, 64, 64, 0.08);
+  animation: countdownPulse 1s ease-in-out infinite;
+}
+
+.imageContainer {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-elevated);
+  aspect-ratio: 4/3;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.infoCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.description {
+  font-size: 0.925rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metaLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.metaValue {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.winnerBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--amber);
+  font-size: 0.875rem;
+}
+
+.winnerBanner strong {
+  font-family: var(--font-mono);
+}
+
+/* ---- Right Column ---- */
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: 80px;
+}
+
+.bidPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  box-shadow: var(--shadow-elevated);
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.priceLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.priceLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.liveDot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #22c55e;
+  font-family: var(--font-mono);
+}
+
+.liveDotPulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.7); }
+}
+
+.currentPrice {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.currentPriceActive {
+  color: var(--amber);
+}
+
+.stepInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.78rem;
+  color: var(--green);
+}
+
+.bidForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.bidInputWrapper {
+  position: relative;
+}
+
+.quickBids {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.quickLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.quickBtn {
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+}
+
+.bidNote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  justify-content: center;
+}
+
+/* ---- State Panels ---- */
+.loginPrompt,
+.waitingState,
+.endedState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+.loginPrompt p,
+.waitingState p,
+.endedState p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.loginPrompt svg,
+.waitingState svg {
+  color: var(--text-muted);
+}
+
+.endedState svg {
+  color: var(--amber);
+}
+
+.startInfo,
+.finalPrice {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.finalPrice {
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* ---- Image Metadata ---- */
+.imageMeta {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.imageMetaItem {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.imageMetaItem strong {
+  color: var(--text-secondary);
+}
+
+/* ---- Admin Action Panel ---- */
+.adminPanel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.adminPanelTitle {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.adminActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.adminNoAction {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: var(--space-4) 0;
+}
+
+/* ---- Skeleton ---- */
+.skeletonPage {
+  padding: var(--space-8) 0;
+}
+
+.skeletonBreadcrumb {
+  height: 16px;
+  width: 200px;
+  margin-bottom: var(--space-8);
+}
+
+.skeletonImage {
+  aspect-ratio: 4/3;
+  width: 100%;
+  border-radius: var(--radius-lg);
+}
+
+.skeletonInfo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.skeletonTitle {
+  height: 32px;
+  width: 70%;
+}
+
+.skeletonDesc {
+  height: 16px;
+  width: 100%;
+}
+
+.skeletonPanel {
+  height: 400px;
+  border-radius: var(--radius-lg);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .rightCol {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .currentPrice {
+    font-size: 1.6rem;
+  }
+}

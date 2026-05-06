@@ -13,6 +13,8 @@ import java.util.UUID;
 public interface AuctionRepository extends JpaRepository<Auction, String> {
     Page<Auction> findByStatus(AuctionStatus status, Pageable pageable);
     
+    Page<Auction> findByStatusIn(List<AuctionStatus> statuses, Pageable pageable);
+    
     List<Auction> findByStatusAndStartAtLessThanEqual(AuctionStatus status, LocalDateTime startAt);
     
     List<Auction> findByStatusAndEndAtLessThanEqual(AuctionStatus status, LocalDateTime endAt);

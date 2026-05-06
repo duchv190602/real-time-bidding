@@ -54,6 +54,11 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
             <version>3.27.2</version> <!-- Use latest stable 3.2x -->
         </dependency>
+        <!-- WebSocket + STOMP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

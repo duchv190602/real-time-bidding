@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 @RestController
-//@RequestMapping("/auctions")
+@RequestMapping("/auction")
 @RequiredArgsConstructor
 public class AuctionController {
 
@@ -48,6 +48,18 @@ public class AuctionController {
     ) {
         return ApiResponse.<Page<AuctionResponse>>builder()
                 .result(auctionService.getAuctions(page, size, status))
+                .build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin")
+    public ApiResponse<Page<AuctionResponse>> getAuctionsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) AuctionStatus status
+    ) {
+        return ApiResponse.<Page<AuctionResponse>>builder()
+                .result(auctionService.getAuctionsForAdmin(page, size, status))
                 .build();
     }
 
