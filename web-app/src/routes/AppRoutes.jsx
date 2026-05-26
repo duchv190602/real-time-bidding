@@ -5,6 +5,7 @@ import HomePage from '../pages/HomePage/HomePage';
 import LoginPage from '../pages/LoginPage/LoginPage';
 import RegisterPage from '../pages/RegisterPage/RegisterPage';
 import AuctionDetailPage from '../pages/AuctionDetailPage/AuctionDetailPage';
+import AuthenticatePage from '../pages/AuthenticatePage/AuthenticatePage';
 
 import AdminAuctionListPage from '../pages/AdminAuctionListPage/AdminAuctionListPage';
 import CreateAuctionPage from '../pages/CreateAuctionPage/CreateAuctionPage';
@@ -34,6 +35,9 @@ export default function AppRoutes() {
         {/* Public routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/auctions/:id" element={<AuctionDetailPage />} />
+
+        {/* Google OAuth2 callback — must be public, user has no token yet */}
+        <Route path="/authenticate" element={<AuthenticatePage />} />
 
 
         {/* Admin auction list */}
