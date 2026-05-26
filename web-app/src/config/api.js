@@ -5,6 +5,7 @@ export const API_PREFIX = '/api/v1';
 export const API_ROUTES = {
   // Identity Service
   AUTH_TOKEN: `${API_PREFIX}/identity/auth/token`,
+  AUTH_GOOGLE: `${API_PREFIX}/identity/auth/google`,
   AUTH_LOGOUT: `${API_PREFIX}/identity/auth/logout`,
   USER_REGISTER: `${API_PREFIX}/identity/users/registration`,
   USER_ME: `${API_PREFIX}/identity/users/me`,
